@@ -4,6 +4,7 @@ import com.mojang.realmsclient.gui.ChatFormatting;
 import me.zeroeightsix.kami.KamiMod;
 import me.zeroeightsix.kami.command.Command;
 import me.zeroeightsix.kami.gui.kami.component.ActiveModules;
+import me.zeroeightsix.kami.gui.kami.component.InventoryPreview;
 import me.zeroeightsix.kami.gui.kami.component.Radar;
 import me.zeroeightsix.kami.gui.kami.component.SettingsPanel;
 import me.zeroeightsix.kami.gui.kami.theme.kami.KamiTheme;
@@ -202,6 +203,12 @@ public class KamiGUI extends GUI {
         Frame frame = new Frame(getTheme(), new Stretcherlayout(1), "Active modules");
         frame.setCloseable(false);
         frame.addChild(new ActiveModules());
+        frame.setPinneable(true);
+        frames.add(frame);
+
+        frame = new Frame(getTheme(), new Stretcherlayout(1), "Inventory");
+        frame.setCloseable(true);
+        frame.addChild(new InventoryPreview());
         frame.setPinneable(true);
         frames.add(frame);
 

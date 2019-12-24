@@ -18,15 +18,24 @@ import org.lwjgl.opengl.GL11;
 @Module.Info(name = "InvPreview", category = Module.Category.RENDER, description = "View your inventory on screen", showOnArray = Module.ShowOnArray.OFF)
 public class InvPreview extends Module {
 
-    private Setting<Integer> optionX;
-    private Setting<Integer> optionY;
+//    private Setting<Integer> optionX;
+//    private Setting<Integer> optionY;
     private Setting<ViewMode> viewMode = register(Settings.e("Appearance", ViewMode.ICONLARGE));
 
     private enum ViewMode {
         ICONLARGEBG, ICONLARGE, MC, ICON, ICONBACK, CLEAR, SOLID, SOLIDCLEAR
     }
 
-    private ResourceLocation getBox() {
+    public void onEnable() {
+        if (mc.player != null) {
+            Command.sendChatMessage("[InvPreview] Right click the module to move it around");
+        }
+        else if (mc.player == null) {
+            return;
+        }
+    }
+
+    public ResourceLocation getBox() {
         if (viewMode.getValue().equals(ViewMode.CLEAR)) {
             return new ResourceLocation("textures/gui/container/invpreview.png");
         }
@@ -53,83 +62,75 @@ public class InvPreview extends Module {
         }
     }
 
-    public InvPreview() {
-        this.optionX = this.register(Settings.i("X", 574));
-        this.optionY = this.register(Settings.i("Y", 469));
-    }
+//    public InvPreview() {
+//        this.optionX = this.register(Settings.i("X", 574));
+//        this.optionY = this.register(Settings.i("Y", 469));
+//    }
 
-    private static void preboxrender() {
-        GL11.glPushMatrix();
-        GlStateManager.pushMatrix();
-        GlStateManager.disableAlpha();
-        GlStateManager.clear(256);
-        GlStateManager.enableBlend();
-    }
+//    private static void preboxrender() {
+//        GL11.glPushMatrix();
+//        GlStateManager.pushMatrix();
+//        GlStateManager.disableAlpha();
+//        GlStateManager.clear(256);
+//        GlStateManager.enableBlend();
+//    }
+//
+//    private static void postboxrender() {
+//        GlStateManager.disableBlend();
+//        GlStateManager.disableDepth();
+//        GlStateManager.disableLighting();
+//        GlStateManager.enableDepth();
+//        GlStateManager.enableAlpha();
+//        GlStateManager.popMatrix();
+//        GL11.glPopMatrix();
+//    }
+//
+//    private static void preitemrender() {
+//        GL11.glPushMatrix();
+//        GL11.glDepthMask(true);
+//        GlStateManager.clear(256);
+//        GlStateManager.disableDepth();
+//        GlStateManager.enableDepth();
+//        RenderHelper.enableStandardItemLighting();
+//        GlStateManager.scale(1.0f, 1.0f, 0.01f);
+//    }
+//
+//    private static void postitemrender() {
+//        GlStateManager.scale(1.0f, 1.0f, 1.0f);
+//        RenderHelper.disableStandardItemLighting();
+//        GlStateManager.enableAlpha();
+//        GlStateManager.disableBlend();
+//        GlStateManager.disableLighting();
+//        GlStateManager.scale(0.5, 0.5, 0.5);
+//        GlStateManager.disableDepth();
+//        GlStateManager.enableDepth();
+//        GlStateManager.scale(2.0f, 2.0f, 2.0f);
+//        GL11.glPopMatrix();
+//    }
 
-    private static void postboxrender() {
-        GlStateManager.disableBlend();
-        GlStateManager.disableDepth();
-        GlStateManager.disableLighting();
-        GlStateManager.enableDepth();
-        GlStateManager.enableAlpha();
-        GlStateManager.popMatrix();
-        GL11.glPopMatrix();
-    }
-
-    private static void preitemrender() {
-        GL11.glPushMatrix();
-        GL11.glDepthMask(true);
-        GlStateManager.clear(256);
-        GlStateManager.disableDepth();
-        GlStateManager.enableDepth();
-        RenderHelper.enableStandardItemLighting();
-        GlStateManager.scale(1.0f, 1.0f, 0.01f);
-    }
-
-    private static void postitemrender() {
-        GlStateManager.scale(1.0f, 1.0f, 1.0f);
-        RenderHelper.disableStandardItemLighting();
-        GlStateManager.enableAlpha();
-        GlStateManager.disableBlend();
-        GlStateManager.disableLighting();
-        GlStateManager.scale(0.5, 0.5, 0.5);
-        GlStateManager.disableDepth();
-        GlStateManager.enableDepth();
-        GlStateManager.scale(2.0f, 2.0f, 2.0f);
-        GL11.glPopMatrix();
-    }
-
-    public void onEnable() {
-        if (mc.player != null) {
-            Command.sendChatMessage("[InvPreview] Right click the module to move it around");
-        } else if (mc.player == null) {
-            return;
-        }
-    }
-
-    @Override
-    public void onRender() {
-        final NonNullList<ItemStack> items = (NonNullList<ItemStack>) InvPreview.mc.player.inventory.mainInventory;
-        this.boxrender(this.optionX.getValue(), this.optionY.getValue());
-        this.itemrender(items, this.optionX.getValue(), this.optionY.getValue());
-    }
-
-    private void boxrender(final int x, final int y) {
-        preboxrender();
-        ResourceLocation box = getBox();
-        InvPreview.mc.renderEngine.bindTexture(box);
-        InvPreview.mc.ingameGUI.drawTexturedModalRect(x, y, 7, 17, 162, 54); // 56 136 1296 432
-        postboxrender();
-    }
-
-    private void itemrender(final NonNullList<ItemStack> items, final int x, final int y) {
-        for (int size = items.size(), item = 9; item < size; ++item) {
-            final int slotx = x + 1 + item % 9 * 18;
-            final int sloty = y + 1 + (item / 9 - 1) * 18;
-            preitemrender();
-            InvPreview.mc.getRenderItem().renderItemAndEffectIntoGUI((ItemStack) items.get(item), slotx, sloty);
-            InvPreview.mc.getRenderItem().renderItemOverlays(InvPreview.mc.fontRenderer, (ItemStack) items.get(item), slotx, sloty);
-            postitemrender();
-        }
-    }
+//    @Override
+//    public void onRender() {
+//        final NonNullList<ItemStack> items = (NonNullList<ItemStack>) InvPreview.mc.player.inventory.mainInventory;
+//        this.boxrender(0, 0);
+//        this.itemrender(items, 0, 0);
+//    }
+//
+//    private void boxrender(final int x, final int y) {
+//        preboxrender();
+//        ResourceLocation box = getBox();
+//        InvPreview.mc.renderEngine.bindTexture(box);
+//        InvPreview.mc.ingameGUI.drawTexturedModalRect(x, y, 7, 17, 162, 54); // 56 136 1296 432
+//        postboxrender();
+//    }
+//
+//    private void itemrender(final NonNullList<ItemStack> items, final int x, final int y) {
+//        for (int size = items.size(), item = 9; item < size; ++item) {
+//            final int slotx = x + 1 + item % 9 * 18;
+//            final int sloty = y + 1 + (item / 9 - 1) * 18;
+//            preitemrender();
+//            InvPreview.mc.getRenderItem().renderItemAndEffectIntoGUI((ItemStack) items.get(item), slotx, sloty);
+//            InvPreview.mc.getRenderItem().renderItemOverlays(InvPreview.mc.fontRenderer, (ItemStack) items.get(item), slotx, sloty);
+//            postitemrender();
+//        }
+//    }
 }
