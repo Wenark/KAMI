@@ -34,6 +34,9 @@ public class DiscordPresence {
         DiscordPresence.presence.state = "";
     }
 
+    public static void runVersion() {
+        boolean versionPrivate = ((BlueDiscordRPC) ModuleManager.getModuleByName("DiscordRPC")).versionGlobal.getValue();
+    }
     public static void start() {
         boolean versionPrivateStart = ((BlueDiscordRPC) ModuleManager.getModuleByName("DiscordRPC")).versionGlobal.getValue();
 
