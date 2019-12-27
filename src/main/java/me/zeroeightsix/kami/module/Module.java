@@ -134,6 +134,11 @@ public class Module {
         return enabled.getValue();
     }
 
+    public boolean hasDescription() {
+        return !getDescription().isEmpty();
+
+    }
+
     protected void onEnable() {}
 
     protected void onDisable() {}
