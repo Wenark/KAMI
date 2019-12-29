@@ -1,4 +1,4 @@
-package me.zeroeightsix.kami.module.zeroeightsix.modules.movement;
+package me.zeroeightsix.kami.module.modules.zeroeightysix.movement;
 
 import me.zeroeightsix.kami.module.Module;
 import me.zeroeightsix.kami.setting.Setting;
@@ -26,7 +26,7 @@ public class ElytraFlight extends Module {
 
         if (mc.player.capabilities.isFlying) {
             mc.player.setVelocity(0, 0, 0);
-            mc.player.setPosition(mc.player.posX, mc.player.posY - (highway.getValue() ? fallspeed.getValue() : .000050000002f), mc.player.posZ);
+            mc.player.setPosition(mc.player.posX, mc.player.posY - (highway.getValue() ? .000050000002f : fallspeed.getValue()), mc.player.posZ);
             mc.player.capabilities.setFlySpeed(speed.getValue());
             mc.player.setSprinting(false);
         } else {
