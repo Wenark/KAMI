@@ -24,21 +24,23 @@ public class ElytraFlight extends Module {
     @Override
     public void onUpdate() {
 
-        if(mc.player.capabilities.isFlying){
+        if (mc.player.capabilities.isFlying) {
             mc.player.setVelocity(0, 0, 0);
             mc.player.setPosition(mc.player.posX, mc.player.posY - (highway.getValue() ? fallspeed.getValue() : .000050000002f), mc.player.posZ);
             mc.player.capabilities.setFlySpeed(speed.getValue());
             mc.player.setSprinting(false);
-        }else{
+        } else {
             mc.player.capabilities.allowFlying = false;
         }
 
-
+        if (mc.player.onGround) {
+            mc.player.capabilities.allowFlying = false;
+        }
 
         if (!mc.player.isElytraFlying()) return;
         switch (mode.getValue()) {
             case BOOST:
-                if(mc.player.isInWater())
+                if (mc.player.isInWater())
                 {
                     mc.getConnection()
                             .sendPacket(new CPacketEntityAction(mc.player,
@@ -46,17 +48,17 @@ public class ElytraFlight extends Module {
                     return;
                 }
 
-                if(mc.gameSettings.keyBindJump.isKeyDown())
+                if (mc.gameSettings.keyBindJump.isKeyDown())
                     mc.player.motionY += 0.08;
-                else if(mc.gameSettings.keyBindSneak.isKeyDown())
+                else if (mc.gameSettings.keyBindSneak.isKeyDown())
                     mc.player.motionY -= 0.04;
 
-                if(mc.gameSettings.keyBindForward.isKeyDown()) {
+                if (mc.gameSettings.keyBindForward.isKeyDown()) {
                     float yaw = (float)Math
                             .toRadians(mc.player.rotationYaw);
                     mc.player.motionX -= MathHelper.sin(yaw) * 0.05F;
                     mc.player.motionZ += MathHelper.cos(yaw) * 0.05F;
-                }else if(mc.gameSettings.keyBindBack.isKeyDown()) {
+                } else if (mc.gameSettings.keyBindBack.isKeyDown()) {
                     float yaw = (float)Math
                             .toRadians(mc.player.rotationYaw);
                     mc.player.motionX += MathHelper.sin(yaw) * 0.05F;
