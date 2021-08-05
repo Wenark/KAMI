@@ -1,6 +1,6 @@
 <img src="https://github.com/S-B99/KAMI/blob/assets/assets/icons/kami.svg" align="left" width="120"/>
 
-# Wenark Blue 
+# KAMI Blue 
 
 ### A minecraft utility mod for anarchy servers.
 
