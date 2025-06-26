@@ -1,75 +1,58 @@
-// make folders
-
-task mkdir {
-    group = "kami"
-    doLast {
-        mkdir System.getProperty("user.home") + "/.minecraft/mods/1.12.2/"
-    }
-}
-
-// delete old versions
-
-task rmOld(type: Delete) {
-    group = "kami"
-    delete fileTree(System.getProperty("user.home") + "/.minecraft/mods/1.12.2/").matching {
-        include "KAMI-*-release.jar"
-    }
-}
-
-// copy file
-
-task copy(type: Copy) {
-    group = "kami"
-    from file("build/libs/")
-    include 'KAMI-*-release.jar'
-    into file(System.getProperty("user.home") + "/.minecraft/mods/1.12.2/")
-}
-
-// forge's stuff 
-
 buildscript {
+
     repositories {
         jcenter()
+
         maven {
             name = 'forge'
-            url = 'http://files.minecraftforge.net/maven'
+            url = 'https://files.minecraftforge.net/maven'
         }
+
         maven {
             name = 'SpongePowered'
-            url = 'http://repo.spongepowered.org/maven'
+            url = 'https://repo.spongepowered.org/repository/maven-public/'
         }
     }
+
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-        classpath 'org.spongepowered:mixingradle:0.4-SNAPSHOT'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
+
 }
 
-apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+
+apply plugin: 'kotlin'
+apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.spongepowered.mixin'
-apply plugin: 'com.github.johnrengelman.shadow'
 
 version project.modVersion
-group project.modGroup // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group project.modGroup
 
-sourceCompatibility = targetCompatibility = '1.8'
-compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
+sourceSets.main.java {
+    srcDirs += 'src/main/cape-api'
+    srcDirs += 'src/main/command'
+    srcDirs += 'src/main/commons'
+    srcDirs += 'src/main/event'
 }
 
-minecraft {
-    version = project.forgeVersion
-    runDir = 'run'
-    mappings = project.mcpVersion
-    coreMod = 'me.zeroeightsix.kami.mixin.MixinLoaderForge'
-    makeObfSourceJar = false
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.useIR = true
+}
+
+compileJava {
+    sourceCompatibility = targetCompatibility = '1.8'
+    options.encoding = 'UTF-8'
 }
 
 repositories {
     maven {
         name = 'spongepowered-repo'
-        url = 'http://repo.spongepowered.org/maven/'
+        url = 'https://repo.spongepowered.org/repository/maven-public/'
     }
     maven {
         name = 'impactdevelopment-repo'
@@ -77,98 +60,166 @@ repositories {
     }
     maven {
         name = 'swt-repo'
-        url = "http://maven-eclipse.github.io/maven"
+        url = "https://maven-eclipse.github.io/maven"
     }
     maven {
         name = "jitpack.io"
         url = "https://jitpack.io"
     }
     mavenCentral()
-	jcenter()
+    jcenter()
+}
+
+
+minecraft {
+    mappings channel: 'stable', version: '39-1.12'
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+
+            property 'fml.coreMods.load', 'org.kamiblue.client.mixin.MixinLoaderForge'
+            property 'mixin.env.disableRefMap', 'true' // Disable refmap so we don't get trolled by Baritone
+
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+        }
+    }
+}
+
+configurations {
+    jarLibs
+    // Force choosing the correct nightly build because Mac OS chooses an invalid one
+    all {
+        resolutionStrategy {
+            force 'org.lwjgl.lwjgl:lwjgl-platform:2.9.4-nightly-20150209'
+        }
+    }
 }
 
 dependencies {
-    //mixin needs to be distributed with the mod, very important
-    compile("org.spongepowered:mixin:0.7.4-SNAPSHOT") {
-        exclude module: 'launchwrapper'
-        exclude module: 'guava'
-        exclude module: 'gson'
+    // Forge
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2854'
+
+    jarLibs('org.spongepowered:mixin:0.7.11-SNAPSHOT') {
         exclude module: 'commons-io'
-    }
-    compile "com.github.ZeroMemes:Alpine:1.5"
-    compile group: 'net.jodah', name: 'typetools', version: '0.5.0'
-    compile group: 'org.yaml', name: 'snakeyaml', version: '1.19'
-    compile(group: 'org.reflections', name: 'reflections', version: '0.9.11') {
-        exclude group: 'com.google.guava', module: 'guava'
-    }
-    // https://mvnrepository.com/artifact/club.minnced/discord-rpc-release
-    // discord rpc
-	//compile group: 'club.minnced', name: 'discord-rpc-release', version: 'v3.3.0'
-//	compile 'club.minnced:java-discord-rpc:2.0.2'
-	//compile 'club.minnced:java-discord-rpc:%VERSION%'
-    
-}
-
-processResources {
-    // this will ensure that this task is redone when the versions change.
-    inputs.property 'version', project.version
-    inputs.property 'mcversion', project.minecraft.version
-
-    // replace stuff in mcmod.info, nothing else
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-
-        // replace version and mcversion
-        expand 'version': project.version, 'mcversion': project.minecraft.version
+        exclude module: 'gson'
+        exclude module: 'guava'
+        exclude module: 'launchwrapper'
+        exclude module: 'log4j-core' // we want to exclude this as well because 0.7.11 includes it too new for MC
     }
 
-    // copy everything else, thats not the mcmod.info
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
+    // Hacky way to get mixin work
+    annotationProcessor('org.spongepowered:mixin:0.8.2:processor') {
+        exclude module: 'gson'
     }
 
-    // move _at.cfg into META-INF
-    rename '(.+_at.cfg)', 'META-INF/$1'
-}
-
-shadowJar {
-    dependencies {
-        include(dependency('org.spongepowered:mixin'))
-        include(dependency('com.github.ZeroMemes:Alpine'))
-        include(dependency('net.jodah:typetools'))
-        include(dependency('org.yaml:snakeyaml'))
-        include(dependency('org.reflections:reflections'))
-        include(dependency('org.javassist:javassist'))
+    jarLibs('org.reflections:reflections:0.9.12') {
+        exclude module: 'gson'
+        exclude module: 'guava'
     }
-    exclude 'dummyThing'
-    exclude 'LICENSE.txt'
-    classifier = 'release'
+
+    jarLibs('club.minnced:java-discord-rpc:2.0.2') {
+        exclude module: 'jna'
+    }
+
+    // Kotlin libs
+    // kotlin-stdlib-common and annotations aren't required at runtime
+    jarLibs("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version") {
+        exclude module: 'kotlin-stdlib-common'
+        exclude module: 'annotations'
+    }
+
+    jarLibs("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version") {
+        exclude module: 'kotlin-stdlib-common'
+        exclude module: 'annotations'
+    }
+
+    jarLibs("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version") {
+        exclude module: 'kotlin-stdlib-common'
+        exclude module: 'annotations'
+    }
+
+    jarLibs("org.jetbrains.kotlin:kotlin-reflect:$kotlin_version") {
+        exclude module: 'kotlin-stdlib-common'
+        exclude module: 'annotations'
+    }
+
+    jarLibs("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version") {
+        exclude module: 'kotlin-stdlib-common'
+        exclude module: 'annotations'
+    }
+
+    // Add them back to compileOnly (provided)
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlin_version"
+    compileOnly 'org.jetbrains:annotations:20.1.0'
+
+    // This Baritone will NOT be included in the jar
+    implementation 'com.github.cabaletta:baritone:1.2.14'
+
+    // This Baritone WILL be included in the jar
+    jarLibs 'cabaletta:baritone-api:1.2'
+
+    // Add everything in jarLibs to implementation (compile)
+    implementation configurations.jarLibs
 }
 
 mixin {
-    defaultObfuscationEnv searge
+    defaultObfuscationEnv 'searge'
     add sourceSets.main, 'mixins.kami.refmap.json'
 }
 
-reobf {
-    shadowJar {
-        mappingType = 'SEARGE'
-        classpath = sourceSets.main.compileClasspath
+processResources {
+    inputs.property 'version', project.version
+
+    exclude '**/rawimagefiles'
+
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        expand 'version': project.version
     }
 }
 
+task sourceJar(type: Jar) { // Generate sources
+    group 'build'
+    description 'Assemble API library source archive'
+
+    archiveClassifier.set('api-source')
+    from sourceSets.main.allSource
+}
+
+task apiJar(type: Jar) {
+    group 'build'
+    description 'Assemble API library archive'
+
+    archiveClassifier.set('api')
+    from sourceSets.main.output
+}
+
+// Don't put baritone mixin here please c:
 jar {
-    manifest {
-        attributes(
-                'MixinConfigs': 'mixins.kami.json',
-                'tweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
-                'TweakOrder': 0,
-                'FMLCorePluginContainsFMLMod': 'true',
-                'FMLCorePlugin': 'me.zeroeightsix.kami.mixin.MixinLoaderForge',
-                'ForceLoadAsMod': 'true',
-                'FMLAT': 'kami_at.cfg'
-        )
+    manifest.attributes(
+            'Manifest-Version': 1.0,
+            'MixinConfigs': 'mixins.kami.json',
+            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+            'TweakOrder': 0,
+            'FMLCorePluginContainsFMLMod': 'true',
+            'FMLCorePlugin': 'org.kamiblue.client.mixin.MixinLoaderForge',
+            'ForceLoadAsMod': 'true',
+            'Main-Class': 'org.kamiblue.client.installer.Installer'
+    )
+
+    // Copy needed libs to jar
+    from {
+        configurations.jarLibs.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
     }
 }
 
-build.dependsOn(shadowJar)
+task buildApi {
+    group 'build'
+    dependsOn sourceJar
+    dependsOn apiJar
+    description 'Assemble API library archives'
+}
